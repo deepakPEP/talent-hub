@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import TalentHub from './talent-hub/page';
 
 export default function Home() {
-  redirect('/talent-hub');
+  return <TalentHub />;
 }
