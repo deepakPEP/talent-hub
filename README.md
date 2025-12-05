@@ -29,8 +29,33 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Environment Variables
+
+The following environment variables are required for the email functionality to work:
+
+```env
+SMTP_HOST=your-smtp-host
+SMTP_PORT=587
+SMTP_USER=your-smtp-username
+SMTP_PASSWORD=your-smtp-password
+SMTP_FROM_NAME=Talent Hub
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+RECIPIENT_EMAIL=recipient@yourdomain.com
+```
+
+**Important for Production:**
+- Ensure all environment variables are set in your production environment
+- The SMTP configuration must allow connections from your production server
+- Port 587 is for TLS, port 465 is for SSL (secure connection)
+- The TLS configuration uses modern encryption (SSLv3 has been removed for security)
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+**Before deploying:**
+1. Set all required environment variables in your Vercel project settings
+2. Verify SMTP credentials are correct
+3. Test the email functionality after deployment

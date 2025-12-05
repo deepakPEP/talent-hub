@@ -22,17 +22,45 @@ export async function POST(request: NextRequest) {
     // Validate the request data
     const validatedData = formSchema.parse(body);
 
+    // Validate required environment variables
+    const requiredEnvVars = {
+      SMTP_HOST: process.env.SMTP_HOST,
+      SMTP_PORT: process.env.SMTP_PORT,
+      SMTP_USER: process.env.SMTP_USER,
+      SMTP_PASSWORD: process.env.SMTP_PASSWORD,
+      SMTP_FROM_NAME: process.env.SMTP_FROM_NAME,
+      SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
+      RECIPIENT_EMAIL: process.env.RECIPIENT_EMAIL,
+    };
+
+    const missingVars = Object.entries(requiredEnvVars)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+    if (missingVars.length > 0) {
+      console.error('Missing required environment variables:', missingVars);
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Server configuration error. Please contact support@pepagora.com' 
+        },
+        { status: 500 }
+      );
+    }
+
     // Create transporter with SMTP configuration
+    const smtpPort = parseInt(process.env.SMTP_PORT || '587');
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_PORT === '465', 
+      port: smtpPort,
+      secure: smtpPort === 465, 
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
       },
       tls: {
-        ciphers: 'SSLv3',
+        // Remove deprecated SSLv3, use default modern TLS
+        rejectUnauthorized: true,
       },
     });
 
@@ -275,6 +303,20 @@ Hiring Requirements:
 Submitted at: ${new Date().toLocaleString()}
     `;
 
+    // Verify transporter connection
+    try {
+      await transporter.verify();
+    } catch (verifyError) {
+      console.error('SMTP connection verification failed:', verifyError);
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Email service configuration error. Please contact support@pepagora.com' 
+        },
+        { status: 500 }
+      );
+    }
+
     // Send email to the company
     const mailOptions = {
       from: `"${process.env.SMTP_FROM_NAME}" <${process.env.SMTP_FROM_EMAIL}>`,
@@ -285,7 +327,12 @@ Submitted at: ${new Date().toLocaleString()}
       html: emailHtml,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (emailError) {
+      console.error('Error sending notification email:', emailError);
+      // Continue to send confirmation email even if notification fails
+    }
 
     // Send confirmation email to the user
     const confirmationHtml = `<!DOCTYPE html>
@@ -497,14 +544,26 @@ The Pepagora Talent Hub Team
     `;
 
     const confirmationMailOptions = {
-      from: `"Talent Hub" <${process.env.SMTP_USER || 'no-reply@pepagora.info'}>`,
+      from: `"Talent Hub" <${process.env.SMTP_FROM_EMAIL}>`,
       to: validatedData.email,
       subject: 'Thank You for Your Talent Hub Inquiry',
       text: confirmationText,
       html: confirmationHtml,
     };
 
-    await transporter.sendMail(confirmationMailOptions);
+    try {
+      await transporter.sendMail(confirmationMailOptions);
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError);
+      // Return error if confirmation email fails
+      return NextResponse.json(
+        { 
+          success: false, 
+          message: 'Failed to send confirmation email. Please contact support@pepagora.com' 
+        },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(
       { 
@@ -514,13 +573,44 @@ The Pepagora Talent Hub Team
       { status: 200 }
     );
   } catch (error) {
-    console.error('Error submitting inquiry:', error);
+    // Enhanced error logging for production debugging
+    console.error('Error submitting inquiry:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { success: false, message: 'Invalid form data', errors: error.issues },
         { status: 400 }
       );
+    }
+
+    // Check for specific error types
+    if (error instanceof Error) {
+      // Network/connection errors
+      if (error.message.includes('ECONNREFUSED') || error.message.includes('ETIMEDOUT')) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'Email service unavailable. Please try again later or contact support@pepagora.com' 
+          },
+          { status: 503 }
+        );
+      }
+      
+      // Authentication errors
+      if (error.message.includes('Invalid login') || error.message.includes('authentication')) {
+        console.error('SMTP authentication failed - check credentials');
+        return NextResponse.json(
+          { 
+            success: false, 
+            message: 'Server configuration error. Please contact support@pepagora.com' 
+          },
+          { status: 500 }
+        );
+      }
     }
 
     return NextResponse.json(
