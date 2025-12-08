@@ -27,11 +27,11 @@ export default function TalentHubLanding() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <a href="https://www.pepagora.com" target="_blank" rel="noopener noreferrer">
-              <Image src={pepagoraLogo} alt="Pepagora" width={120} height={40} className="h-10 w-auto" />
+              <Image src={pepagoraLogo} alt="Pepagora" width={120} height={40} unoptimized className="h-10 w-auto" />
             </a>
             <span className="text-muted-foreground">×</span>
             <a href="https://www.4excelerate.org" target="_blank" rel="noopener noreferrer">
-              <Image src={excelerateLogo} alt="Excelerate" width={120} height={40} className="w-[90px] h-[20px] md:w-auto md:h-10" />
+              <Image src={excelerateLogo} alt="Excelerate" width={120} height={40} unoptimized className="w-[90px] h-5 md:w-auto md:h-10" />
             </a>
           </div>
           <Button onClick={() => scrollToSection('inquiry-form')} variant="default" className="text-white hidden md:block">
@@ -183,7 +183,7 @@ export default function TalentHubLanding() {
                 <CheckCircle2 className="w-6 h-6 text-green-600 shrink-0 mt-1" />
                 <div>
                   <h3 className="font-semibold mb-1">Build a talent pipeline</h3>
-                  <p className="text-muted-foreground text-sm">Always ready when you need to scale</p>
+                  <p className="text-muted-foreground text-sm">Local, national & global talent for brand and market expansion</p>
                 </div>
               </div>
               <div className="flex items-start gap-4 p-4 bg-white rounded-lg shadow-sm">
@@ -471,11 +471,11 @@ export default function TalentHubLanding() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* About */}
             <div className="md:col-span-1">
-              <div className="flex items-center gap-3 mb-4">
-                <Image src={pepagoraLogo} alt="Pepagora" width={120} height={40} className="h-10 w-auto" />
-                <span className="text-muted-foreground">×</span>
-                <Image src={excelerateLogo} alt="Excelerate" width={120} height={40} className="w-[120px] h-[25px] md:h-10 md:w-auto" />
-              </div>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <Image src={pepagoraLogo} alt="Pepagora" width={120} height={40} unoptimized className="h-10 w-auto" />
+              <span className="text-muted-foreground">×</span>
+              <Image src={excelerateLogo} alt="Excelerate" width={120} height={40} unoptimized className="w-[120px] h-[25px] md:w-[180px] md:h-[30px]"/>
+            </div>
               <p className="text-sm text-muted-foreground">
                 Together, we&apos;re solving one of the biggest challenges SMEs face: finding good people without breaking the budget.
               </p>
